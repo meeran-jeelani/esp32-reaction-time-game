@@ -4,103 +4,176 @@
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 #define BUTTON_PIN 4
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
+// ---------------- STATES ----------------
 enum GameState {
+  IDLE,
   WAITING,
   READY,
-  SHOW_RESULT
+  RESULT
 };
 
-GameState state = WAITING;
+GameState state = IDLE;
 
-unsigned long startTime = 0;
-unsigned long reactionTime = 0;
-unsigned long waitStart = 0;
-unsigned long randomDelayTime = 0;
-
+// ---------------- INPUT ----------------
 bool lastButtonState = HIGH;
+bool buttonLocked = false;
 
-void setup() {
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+// ---------------- TIMING ----------------
+unsigned long waitStart = 0;
+unsigned long randomDelay = 0;
+unsigned long reactionStart = 0;
+unsigned long reactionTime = 0;
+unsigned long bestTime = 0;
 
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.clearDisplay();
+// ---------------- UI ----------------
+unsigned long animTimer = 0;
+int dots = 0;
 
-  randomSeed(analogRead(0));
+// ---------------- UI FUNCTIONS ----------------
 
-  showWaitScreen();
-  waitStart = millis();
-  randomDelayTime = random(2000, 5000);
+void drawFrame() {
+  display.drawRect(0, 0, 128, 64, WHITE);
 }
 
-void loop() {
-  bool currentButtonState = digitalRead(BUTTON_PIN);
-
-  switch (state) {
-
-    case WAITING:
-      // Ignore button during waiting
-      if (millis() - waitStart >= randomDelayTime) {
-        showPressScreen();
-        startTime = millis();
-        state = READY;
-      }
-      break;
-
-    case READY:
-      // Detect NEW button press only
-      if (lastButtonState == HIGH && currentButtonState == LOW) {
-        reactionTime = millis() - startTime;
-        showResult();
-        state = SHOW_RESULT;
-      }
-      break;
-
-    case SHOW_RESULT:
-      delay(3000);
-      resetGame();
-      break;
-  }
-
-  lastButtonState = currentButtonState;
-}
-
-void showWaitScreen() {
+void showIdle() {
   display.clearDisplay();
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(20, 20);
-  display.println("WAIT...");
+  display.setTextColor(WHITE);
+  drawFrame();
+  display.setTextSize(1);
+  display.setCursor(22, 18);
+  display.println("REACTION GAME");
+  display.setCursor(20, 40);
+  display.println("Press Button");
   display.display();
 }
 
-void showPressScreen() {
+void showWait() {
+  if (millis() - animTimer > 400) {
+    animTimer = millis();
+    dots = (dots + 1) % 4;
+
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    drawFrame();
+    display.setTextSize(2);
+    display.setCursor(30, 22);
+    display.print("WAIT");
+    for (int i = 0; i < dots; i++) display.print(".");
+    display.display();
+  }
+}
+
+void showPress() {
   display.clearDisplay();
+  display.fillRect(0, 0, 128, 64, WHITE);
+  display.setTextColor(BLACK, WHITE);
   display.setTextSize(2);
-  display.setCursor(15, 20);
+  display.setCursor(20, 22);
   display.println("PRESS!");
   display.display();
 }
 
 void showResult() {
   display.clearDisplay();
+  display.setTextColor(WHITE);
+  drawFrame();
   display.setTextSize(1);
-  display.setCursor(0, 10);
-  display.println("Reaction Time:");
-  display.setTextSize(2);
-  display.setCursor(10, 30);
+
+  display.setCursor(10, 12);
+  display.print("Time: ");
   display.print(reactionTime);
   display.println(" ms");
+
+  display.setCursor(10, 30);
+  display.print("Best: ");
+  display.print(bestTime);
+  display.println(" ms");
+
+  display.setCursor(10, 50);
+  display.println("Press to Restart");
+
   display.display();
 }
 
-void resetGame() {
-  state = WAITING;
-  showWaitScreen();
-  waitStart = millis();
-  randomDelayTime = random(2000, 5000);
+// ---------------- SETUP ----------------
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    while (true);
+  }
+
+  randomSeed(micros());
+  showIdle();
+}
+
+// ---------------- LOOP ----------------
+
+void loop() {
+  bool buttonState = digitalRead(BUTTON_PIN);
+  bool pressed = (lastButtonState == HIGH && buttonState == LOW);
+  bool released = (lastButtonState == LOW && buttonState == HIGH);
+  lastButtonState = buttonState;
+
+  // Unlock button only after release
+  if (released) buttonLocked = false;
+
+  // -------- IDLE --------
+  if (state == IDLE) {
+    if (pressed && !buttonLocked) {
+      buttonLocked = true;
+
+      randomDelay = random(2000, 5000);
+      waitStart = millis();
+      animTimer = millis();
+      dots = 0;
+
+      state = WAITING;
+    }
+  }
+
+  // -------- WAITING --------
+  else if (state == WAITING) {
+    showWait();
+
+    if (millis() - waitStart >= randomDelay) {
+      showPress();
+
+      // RESET button logic for clean reaction press
+      lastButtonState = HIGH;
+      buttonLocked = false;
+
+      reactionStart = millis();
+      state = READY;
+    }
+  }
+
+  // -------- READY --------
+  else if (state == READY) {
+    if (pressed && !buttonLocked) {
+      buttonLocked = true;
+
+      reactionTime = millis() - reactionStart;
+      if (bestTime == 0 || reactionTime < bestTime) {
+        bestTime = reactionTime;
+      }
+
+      showResult();
+      state = RESULT;
+    }
+  }
+
+  // -------- RESULT --------
+  else if (state == RESULT) {
+    if (pressed && !buttonLocked) {
+      buttonLocked = true;
+      showIdle();
+      state = IDLE;
+    }
+  }
 }
