@@ -65,12 +65,17 @@ This project is **actively being improved**.
 ---
 
 ## 🖼️ Project Images
+### 🎮 Gameplay
+<p align="center">
+  <img src="images/gameplay_1.jpg" width="300">
+  <img src="images/gameplay_2.jpg" width="300">
+</p>
 
-### 🔧 Hardware Setup
-![Circuit](images/circuit.jpg)
+### 🔌 Hardware Setup
+<p align="center">
+  <img src="images/circuit.jpg" width="400">
+</p>
 
-### 🎯 Gameplay
-![Gameplay](images/gameplay.jpg)
 
 ---
 
