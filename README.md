@@ -59,14 +59,10 @@ This project is **actively being improved**.
 ---
 
 ## 🔮 Planned Enhancements
-- 🚫 Early button press detection with visual feedback  
-- 🔊 Sound feedback using an active buzzer  
+- 🚫 Early button press detection with visual feedback    
 
 ---
 ## 🖼️ Project Images
-
-
-
 
 ### 🎮 Gameplay
 <p align="center">
