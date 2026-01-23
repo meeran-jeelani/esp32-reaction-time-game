@@ -70,12 +70,10 @@ This project is **actively being improved**.
 
 ### 🎮 Gameplay
 <p align="center">
-  <img src="images/gameplay_1.jpg" width="300">
-  <img src="images/gameplay_2.jpg" width="300">
+  <img src="images/gameplay_1.jpg" width="450">
+  <img src="images/gameplay_2.jpg" width="450">
 </p>
-<p align="center">
-  <em>Start screen (left) and result screen (right)</em>
-</p>
+
 
 ### 🔌 Hardware Setup
 <p align="center">
