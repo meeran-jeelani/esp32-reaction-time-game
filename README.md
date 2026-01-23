@@ -63,18 +63,25 @@ This project is **actively being improved**.
 - 🔊 Sound feedback using an active buzzer  
 
 ---
-
 ## 🖼️ Project Images
+
+
+
+
 ### 🎮 Gameplay
 <p align="center">
   <img src="images/gameplay_1.jpg" width="300">
   <img src="images/gameplay_2.jpg" width="300">
+</p>
+<p align="center">
+  <em>Start screen (left) and result screen (right)</em>
 </p>
 
 ### 🔌 Hardware Setup
 <p align="center">
   <img src="images/circuit.jpg" width="400">
 </p>
+
 
 
 ---
