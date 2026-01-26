@@ -57,9 +57,9 @@ No additional features are currently planned.
 
 ✔ Core gameplay implemented  
 ✔ UI improvements completed  
-✔ Best score tracking added 
+✔ Best score tracking added<br>
 ✔ Early press detection added  
-
+</br>
 ---
 ## 🖼️ Project Images
 
