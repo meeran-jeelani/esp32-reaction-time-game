@@ -13,7 +13,8 @@ enum GameState {
   IDLE,
   WAITING,
   READY,
-  RESULT
+  RESULT,
+  EARLY
 };
 
 GameState state = IDLE;
@@ -95,7 +96,18 @@ void showResult() {
 
   display.setCursor(10, 50);
   display.println("Press to Restart");
+  display.display();
+}
 
+void showEarly() {
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  drawFrame();
+  display.setTextSize(2);
+  display.setCursor(10, 18);
+  display.println("TOO");
+  display.setCursor(10, 38);
+  display.println("EARLY!");
   display.display();
 }
 
@@ -104,9 +116,9 @@ void showResult() {
 void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    while (true);
-  }
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.clearDisplay();
+  display.display();
 
   randomSeed(micros());
   showIdle();
@@ -116,7 +128,7 @@ void setup() {
 
 void loop() {
   bool buttonState = digitalRead(BUTTON_PIN);
-  bool pressed = (lastButtonState == HIGH && buttonState == LOW);
+  bool pressed  = (lastButtonState == HIGH && buttonState == LOW);
   bool released = (lastButtonState == LOW && buttonState == HIGH);
   lastButtonState = buttonState;
 
@@ -141,10 +153,17 @@ void loop() {
   else if (state == WAITING) {
     showWait();
 
-    if (millis() - waitStart >= randomDelay) {
+    // ✅ EARLY PRESS DETECTION
+    if (pressed && !buttonLocked) {
+      buttonLocked = true;
+      showEarly();
+      state = EARLY;
+    }
+
+    else if (millis() - waitStart >= randomDelay) {
       showPress();
 
-      // RESET button logic for clean reaction press
+      // Reset input logic
       lastButtonState = HIGH;
       buttonLocked = false;
 
@@ -170,6 +189,15 @@ void loop() {
 
   // -------- RESULT --------
   else if (state == RESULT) {
+    if (pressed && !buttonLocked) {
+      buttonLocked = true;
+      showIdle();
+      state = IDLE;
+    }
+  }
+
+  // -------- EARLY --------
+  else if (state == EARLY) {
     if (pressed && !buttonLocked) {
       buttonLocked = true;
       showIdle();
